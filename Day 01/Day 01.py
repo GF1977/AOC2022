@@ -15,7 +15,7 @@ all_calories.append(calories) # The last Elf's snacks
 all_calories.sort(reverse=True)
 
 print("Part One = ", all_calories[0])
-print("Part two = ", all_calories[0] + all_calories[1] + all_calories[2])
+print("Part Two = ", all_calories[0] + all_calories[1] + all_calories[2])
 
 # Answers:
 # Part One =  68787

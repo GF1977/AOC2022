@@ -29,8 +29,8 @@ for round in gamePlan:
     totalScorePartTwo = totalScorePartTwo + res
 
 print("----------------------------")
-print("Part one:", totalScorePartOne)
-print("Part one:", totalScorePartTwo)
+print("Part One:", totalScorePartOne)
+print("Part Two:", totalScorePartTwo)
 
 # Answers:
 # Part one: 13484

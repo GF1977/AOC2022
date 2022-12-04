@@ -39,8 +39,8 @@ for group in groups:
     answerPartTwo = answerPartTwo + GetPriority(badge)
 
 print("----------------------------")
-print("Part one:", answerPartOne)
-print("Part one:", answerPartTwo)
+print("Part One:", answerPartOne)
+print("Part Two:", answerPartTwo)
 
 # Answers:
 # Part one: 7674
