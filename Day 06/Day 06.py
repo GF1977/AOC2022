@@ -27,16 +27,20 @@ def get_marker(msg, shift):
     return index
 
 
-file_name = "Day06-input-p.txt"
-buffer = parse_file(file_name)
-for message in buffer:
-    part_one = get_marker(message, 4)
-    part_two = get_marker(message, 14)
+def main():
+    file_name = "Day06-input-p.txt"
+    buffer = parse_file(file_name)
+    for message in buffer:
+        part_one = get_marker(message, 4)
+        part_two = get_marker(message, 14)
+
+    print("----------------------------")
+    print("Part One:", part_one)
+    print("Part Two:", part_two)
 
 
-print("----------------------------")
-print("Part One:", part_one)
-print("Part Two:", part_two)
+if __name__ == "__main__":
+    main()
 
 # Answers:
 # Part One: RFFFWBPNS
