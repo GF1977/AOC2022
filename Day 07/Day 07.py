@@ -4,7 +4,6 @@ from anytree import Node, RenderTree, PreOrderIter
 def parse_file(file_to_process):
     file = open(file_to_process, mode="r")
     data: list[str] = file.read().split("\n")
-
     return data
 
 
@@ -12,48 +11,35 @@ class File(object):
     def __init__(self, file_type, file_size, file_name):
         self.file_type = file_type
         self.file_name = file_name
-        if file_type == "f":
-            self.file_size = file_size
-        if file_type == "d":
-            self.file_size = 0
+        self.file_size = file_size
+
 
 def show_tree(_root):
     for pre, fill, node in RenderTree(_root):
-        if node.name == "/":
-            element = "/"
-        else:
-            element = node.name.file_name + " (Type:" + node.name.file_type + "  Size:" + str(node.name.file_size) + ")"
+        element = node.name.file_name + " (Type:" + node.name.file_type + "  Size:" + str(node.name.file_size) + ")"
         print("%s%s" % (pre, element))
 
-def walk_the_tree(node: Node):
+
+def update_dir_sizes(node: Node):
     size = 0
     for child in node.children:
         if child.name.file_type == "f":
             size = size + int(child.name.file_size)
         else:
-            size = size + walk_the_tree(child)
-
-    dir_name = node.name.file_name
+            size = size + update_dir_sizes(child)
     node.name.file_size = size
-
-    print("Directory = {:<12} Size = {:<40}".format(dir_name, size))
-
-
     return size
 
 
 def main():
-
-    #tree_test()
-    #return 0
-
     file_name = "Day07-input-p.txt"
     data_input = parse_file(file_name)
 
-    root = Node(File("d",0,"/"))
+    root = Node(File("d", 0, "/"))
     current_dir = root
 
     for line in data_input:
+
         if line[0] == "$":
             command = line.split(" ")
             if command[1] == "cd":
@@ -69,35 +55,32 @@ def main():
                                 current_dir = node
                                 break
 
-        else:
-            result = line.split(" ")
-            new_f = File(file_type="", file_size= 0, file_name = "")
-            new_file = line
-            if result[0] == "dir":
-                new_file = result[1]
-                new_f.file_type = "d"
-                new_f.file_size = 0
-                new_f.file_name = result[1]
+        else:  # everything here is the output of "ls" command
+            file_info = line.split(" ")
+            if file_info[0] == "dir":
+                new_f = File(file_type="d", file_name=file_info[1], file_size=0)
             else:
-                new_f.file_type = "f"
-                new_f.file_size = result[0]
-                new_f.file_name = result[1]
-
+                new_f = File(file_type="f", file_name=file_info[1], file_size=file_info[0])
 
             Node(new_f, parent=current_dir)
 
-    walk_the_tree(root)
-    show_tree(root)
+    update_dir_sizes(root)
+
+    disk_space_available = 70000000
+    need_unused_space = 30000000
+    free_space = disk_space_available - root.name.file_size
+    space_to_release = need_unused_space - free_space
 
     part_one = 0
+    part_two = root.name.file_size
+
     for child in PreOrderIter(root):
-        a = 9
-        if child.name.file_type == "d" and child.name.file_size < 100000:
-            part_one += child.name.file_size
-
-
-    #part_one = 0
-    part_two = 1
+        dir_size = child.name.file_size
+        if child.name.file_type == "d":
+            if dir_size < 100000:
+                part_one += dir_size
+            if space_to_release <= dir_size < part_two:
+                part_two = dir_size
 
     print("----------------------------")
     print("Part One:", part_one)
@@ -108,5 +91,5 @@ if __name__ == "__main__":
     main()
 
 # Answers:
-# Part One:
-# Part Two:
+# Part One: 1297159
+# Part Two: 3866390
