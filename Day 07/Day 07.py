@@ -32,10 +32,10 @@ def update_dir_sizes(node: Node):
 
 
 def process_ls_output(file_info):
-    if file_info[0] == "dir":
-        new_f = File(file_type="d", file_name=file_info[1], file_size=0)
-    else:
-        new_f = File(file_type="f", file_name=file_info[1], file_size=file_info[0])
+    new_f = File(file_type="d", file_name=file_info[1], file_size=0)
+    if file_info[0] != "dir":
+        new_f.file_type = "f"
+        new_f.file_size = file_info[0]
     return new_f
 
 
