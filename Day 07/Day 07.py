@@ -31,50 +31,53 @@ def update_dir_sizes(node: Node):
     return size
 
 
+def process_ls_output(file_info):
+    if file_info[0] == "dir":
+        new_f = File(file_type="d", file_name=file_info[1], file_size=0)
+    else:
+        new_f = File(file_type="f", file_name=file_info[1], file_size=file_info[0])
+    return new_f
+
+
+def cd_execute(command, current_dir):
+    if command[2] == "/":
+        return current_dir.root
+    if command[2] == "..":
+        return current_dir.parent
+
+    destination_dir = command[2]
+    for node in current_dir.children:
+        if node.name.file_name == destination_dir and node.name.file_type == "d":
+            return node
+
+
 def main():
     file_name = "Day07-input-p.txt"
     data_input = parse_file(file_name)
 
-    root = Node(File("d", 0, "/"))
-    current_dir = root
+    file_system = Node(File("d", 0, "/"))
+    current_dir = file_system.root
 
     for line in data_input:
+        split_line = line.split(" ")
+        if "$ cd" in line:
+            current_dir = cd_execute(split_line, current_dir)
 
-        if line[0] == "$":
-            command = line.split(" ")
-            if command[1] == "cd":
-                if command[2] == "/":
-                    current_dir = root
-                else:
-                    if command[2] == "..":
-                        current_dir = current_dir.parent
-                    else:
-                        new_dir = command[2]
-                        for node in current_dir.children:
-                            if node.name.file_name == new_dir and node.name.file_type == "d":
-                                current_dir = node
-                                break
+        if line[0] != "$":  # everything here is the output of "ls" command
+            new_file = process_ls_output(split_line)
+            Node(new_file, parent=current_dir)
 
-        else:  # everything here is the output of "ls" command
-            file_info = line.split(" ")
-            if file_info[0] == "dir":
-                new_f = File(file_type="d", file_name=file_info[1], file_size=0)
-            else:
-                new_f = File(file_type="f", file_name=file_info[1], file_size=file_info[0])
-
-            Node(new_f, parent=current_dir)
-
-    update_dir_sizes(root)
+    update_dir_sizes(file_system)
 
     disk_space_available = 70000000
     need_unused_space = 30000000
-    free_space = disk_space_available - root.name.file_size
+    free_space = disk_space_available - file_system.name.file_size
     space_to_release = need_unused_space - free_space
 
     part_one = 0
-    part_two = root.name.file_size
+    part_two = file_system.name.file_size
 
-    for child in PreOrderIter(root):
+    for child in PreOrderIter(file_system):
         dir_size = child.name.file_size
         if child.name.file_type == "d":
             if dir_size < 100000:
