@@ -5,90 +5,64 @@ def parse_file(file_to_process):
     return data
 
 
-def get_scenic_score(row, col, tree_map):
+
+def get_tree_details(row, col, tree_map):
     tree_size = tree_map[row][col]
-    width = len(tree_map[0])
-    height = len(tree_map)
+    is_visible = 4  # let's assume a tree is visible from all 4 sides
 
-    up = 0
-    for r in range(row-1, -1, -1):
-        up += 1
+    up_scenic_score = 0
+    for r in range(row - 1, -1, -1):  # this weird  -1 -1 because we are moving from center to periphery
+        up_scenic_score += 1
         if tree_size <= tree_map[r][col]:
+            is_visible -= 1
             break
 
-
-    down = 0
-    for r in range(row + 1, height):
-        down += 1
-        if tree_size <= tree_map[r][col]:
-            break
-
-
-    left = 0
-    for c in range(col - 1, -1, -1):
-        left += 1
-        if tree_size <= tree_map[row][c]:
-            break
-
-
-    right = 0
-    for c in range(col + 1, width):
-        right += 1
-        if tree_size <= tree_map[row][c]:
-            break
-
-
-
-    return up*down*right*left
-
-
-def is_tree_visible(row, col, tree_map):
-    tree_size = tree_map[row][col]
-
-    left = tree_map[row][:col]
-    right = tree_map[row][col + 1:]
-
-    up = []
-    for r in range(0, row):
-        up.append(tree_map[r][col])
-
-    down = []
+    down_scenic_score = 0
     for r in range(row + 1, len(tree_map)):
-        down.append(tree_map[r][col])
+        down_scenic_score += 1
+        if tree_size <= tree_map[r][col]:
+            is_visible -= 1
+            break
 
-    return max(left) < tree_size or max(right)  < tree_size or max(down) < tree_size or max(up)  < tree_size
+    left_scenic_score = 0
+    for c in range(col - 1, -1, -1):
+        left_scenic_score += 1
+        if tree_size <= tree_map[row][c]:
+            is_visible -= 1
+            break
 
-def count_visible_trees(tree_map):
-    width = len(tree_map[0])
-    height = len(tree_map)
+    right_scenic_score = 0
+    for c in range(col + 1, len(tree_map[0])):
+        right_scenic_score += 1
+        if tree_size <= tree_map[row][c]:
+            is_visible -= 1
+            break
 
-    count = 2 * width + 2 * height - 4  # perimeter
+    return up_scenic_score * down_scenic_score * right_scenic_score * left_scenic_score, is_visible
 
-    is_tree_visible(1, 3, tree_map)
-    scenic_score = 0
+
+def analyze_the_map(tree_map):
+    count_trees_visible = 0
     best_scenic_score = 0
-    for r in range(1, height - 1):
-        for c in range(1, width - 1):
-            if is_tree_visible(r, c, tree_map):
-                count += 1
-            scenic_score = get_scenic_score(r,c, tree_map)
+
+    for r in range(0, len(tree_map)):
+        for c in range(0, len(tree_map[0])):
+            scenic_score, is_visible = get_tree_details(r, c, tree_map)
+            if is_visible:
+                count_trees_visible += 1
             if scenic_score > best_scenic_score:
                 best_scenic_score = scenic_score
 
-    return count, best_scenic_score
+    return count_trees_visible, best_scenic_score
 
 
 def main():
     file_name = "Day08-input-p.txt"
     tree_map = parse_file(file_name)
-
-    aaa = get_scenic_score(2, 2, tree_map)
-
-    part_one, part_two = count_visible_trees(tree_map)
-
+    count_trees_visible, best_scenic_score = analyze_the_map(tree_map)
     print("----------------------------")
-    print("Part One:", part_one)
-    print("Part Two:", part_two)
+    print("Part One:", count_trees_visible)
+    print("Part Two:", best_scenic_score)
 
 
 if __name__ == "__main__":
@@ -96,4 +70,4 @@ if __name__ == "__main__":
 
 # Answers:
 # Part One: 1851
-# Part Two:
+# Part Two: 574080
