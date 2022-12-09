@@ -2,7 +2,7 @@ def parse_file(file_to_process):
     file = open(file_to_process, mode="r")
     data: list[str] = file.read().split("\n")
 
-    return 0
+    return data
 
 
 def main():
