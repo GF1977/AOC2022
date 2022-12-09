@@ -1,5 +1,28 @@
-where_tail_was = {}
+class Rope:
+    def __init__(self):
+        self.head_x, self.head_y, self.tail_x, self.tail_y = 0, 0, 0, 0
+        self.prev_pos_head_x, self.prev_pos_head_y = 0, 0
+        self.where_tail_was = {}
 
+    def tail_near_head(self):
+        return abs(self.head_x - self.tail_x) <= 1 and abs(self.head_y - self.tail_y) <= 1
+
+    def memorize_tail_position(self):
+        position = self.tail_x * 100000 + self.tail_y
+        self.where_tail_was[position] = 0
+
+    def move_head(self, step_x, step_y):
+        self.prev_pos_head_x = self.head_x
+        self.prev_pos_head_y = self.head_y
+        self.head_x += step_x
+        self.head_y += step_y
+
+    def move_tail(self):
+        self.tail_x = self.prev_pos_head_x
+        self.tail_y = self.prev_pos_head_y
+
+    def get_visited_positions(self):
+        return len(self.where_tail_was)
 
 
 def parse_file(file_to_process):
@@ -9,119 +32,48 @@ def parse_file(file_to_process):
     return data
 
 
-def is_t_and_h_in_touch(h_x, h_y, t_x, t_y):
-    if abs(h_x - t_x) <= 1 and abs(h_y - t_y) <= 1:
-        return True
-    else:
-        return False
-
-
-
-
-def move_head(command, h_x, h_y, t_x, t_y, prev_step_x, prev_step_y):
-
-    command = command.split(" ")
+def emulate_rope_motion(command, rope):
     direction = command[0]
     distance = int(command[1])
-    tail_position = str(t_x)+":"+str(t_y)
-    #where_tail_was[tail_position] = 0
-
-    step_x = 0
-    step_y = 0
+    step_x, step_y = 0, 0
 
     if direction == "R":
-        step_x = 1
+        step_x = +1
     if direction == "L":
         step_x = -1
     if direction == "U":
-        step_y = 1
+        step_y = +1
     if direction == "D":
         step_y = -1
 
-    #print("Command: ", command)
     for step in range(0, distance):
-        h_x += step_x
-        h_y += step_y
+        rope.move_head(step_x, step_y)
+        if not rope.tail_near_head():
+            rope.move_tail()
+        rope.memorize_tail_position()
+    return rope
 
-        in_touch = is_t_and_h_in_touch(h_x, h_y, t_x, t_y)
-        if not in_touch:
-            t_x += step_x
-            t_y += step_y
-
-            if h_y != t_y and h_x != t_x:
-                t_x += prev_step_x
-                t_y += prev_step_y
-
-            tail_position = str(t_x) + ":" + str(t_y)
-
-
-        #print("[h_x ; h_y] = ", h_x, ";", h_y)
-        #print("[t_x ; t_y] = ", t_x, ";", t_y)
-        #print("-------------------------------")
-
-        if tail_position not in where_tail_was.keys():
-            where_tail_was[tail_position] = 0
-        else:
-            where_tail_was[tail_position] += 1
-
-    prev_step_x = step_x
-    prev_step_y = step_y
-
-    return h_x, h_y, t_x, t_y, tail_position, prev_step_x, prev_step_y
 
 def main():
-    file_name = "Day09-input-d.txt"
+    file_name = "Day09-input-p.txt"
     data_input = parse_file(file_name)
-    part_one = 0
     part_two = 1
 
+    rope = Rope()
 
-    h_x = 00000000
-    h_y = 00000000
-    t_x = 00000000
-    t_y = 00000000
-
-    prev_step_x = 0
-    prev_step_y = 0
-
-    tail_position = ""
     for command in data_input:
-        h_x, h_y, t_x, t_y, tail_position, prev_step_x, prev_step_y = move_head(command, h_x, h_y, t_x, t_y, prev_step_x, prev_step_y)
+        rope = emulate_rope_motion(command.split(" "), rope)
 
-
-
-
-
-    part_one = len(where_tail_was)
+    part_one = rope.get_visited_positions()
 
     print("----------------------------")
     print("Part One:", part_one)
     print("Part Two:", part_two)
 
 
-    # res = []
-    # for x in range(0,12):
-    #     line = []
-    #     for y in range(0, 12):
-    #         line.append(".")
-    #     res.append(line)
-    #
-    # for a in where_tail_was:
-    #     x,y = a.split(":")
-    #     #print (XY[0], XY[1])
-    #     res[11 - int(y)][int(x)] = "#"
-    #
-    #
-    # for l in res:
-    #     s = ""
-    #     for a in l:
-    #         s+=a
-    #     print(s)
-
-
 if __name__ == "__main__":
     main()
 
 # Answers:
-# Part One:
+# Part One: 6384
 # Part Two:
