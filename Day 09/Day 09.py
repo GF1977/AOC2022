@@ -8,7 +8,7 @@ class Rope:
         return abs(self.head_x - self.tail_x) <= 1 and abs(self.head_y - self.tail_y) <= 1
 
     def memorize_tail_position(self):
-        position = self.tail_x * 100000 + self.tail_y
+        position = str(self.tail_x) + ":" + str(self.tail_y)
         self.where_tail_was[position] = 0
 
     def move_head(self, step_x, step_y):
@@ -18,8 +18,13 @@ class Rope:
         self.head_y += step_y
 
     def move_tail(self):
+        s_x = self.prev_pos_head_x - self.tail_x
+        s_y = self.prev_pos_head_y - self.tail_y
+
         self.tail_x = self.prev_pos_head_x
         self.tail_y = self.prev_pos_head_y
+
+        return s_x, s_y
 
     def get_visited_positions(self):
         return len(self.where_tail_was)
@@ -57,7 +62,7 @@ def emulate_rope_motion(command, ropes):
 
 
 def main():
-    file_name = "Day09-input-p.txt"
+    file_name = "Day09-input-d2.txt"
     data_input = parse_file(file_name)
     part_two = 1
 
@@ -74,6 +79,28 @@ def main():
     print("----------------------------")
     print("Part One:", part_one)
     print("Part Two:", part_two)
+
+
+    wts = ropes[0].where_tail_was
+    grid_size = 28
+
+    res = []
+    for x in range(0, grid_size - 6):
+        line = []
+        for y in range(0, grid_size):
+            line.append(".")
+        res.append(line)
+
+    for a in wts:
+        x,y = a.split(":")
+        res[15 - int(y)][15 - int(x)] = "#"
+
+
+    for l in res:
+        s = ""
+        for a in l:
+            s = a + s
+        print(s)
 
 
 if __name__ == "__main__":
