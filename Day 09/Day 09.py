@@ -32,7 +32,7 @@ def parse_file(file_to_process):
     return data
 
 
-def emulate_rope_motion(command, rope):
+def emulate_rope_motion(command, ropes):
     direction = command[0]
     distance = int(command[1])
     step_x, step_y = 0, 0
@@ -46,12 +46,14 @@ def emulate_rope_motion(command, rope):
     if direction == "D":
         step_y = -1
 
+    rope = ropes[0]
+
     for step in range(0, distance):
         rope.move_head(step_x, step_y)
         if not rope.tail_near_head():
             rope.move_tail()
         rope.memorize_tail_position()
-    return rope
+    return ropes
 
 
 def main():
@@ -59,12 +61,15 @@ def main():
     data_input = parse_file(file_name)
     part_two = 1
 
-    rope = Rope()
+    ropes = []
+
+    for i in range(0, 9):
+        ropes.append(Rope())
 
     for command in data_input:
-        rope = emulate_rope_motion(command.split(" "), rope)
+        ropes = emulate_rope_motion(command.split(" "), ropes)
 
-    part_one = rope.get_visited_positions()
+    part_one = ropes[0].get_visited_positions()
 
     print("----------------------------")
     print("Part One:", part_one)
