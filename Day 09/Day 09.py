@@ -51,14 +51,36 @@ def emulate_rope_motion(command, ropes):
     if direction == "D":
         step_y = -1
 
-    rope = ropes[0]
+
 
     for step in range(0, distance):
-        rope.move_head(step_x, step_y)
-        if not rope.tail_near_head():
-            rope.move_tail()
-        rope.memorize_tail_position()
+        for rope in ropes:
+            rope.move_head(step_x, step_y)
+            if not rope.tail_near_head():
+                rope.move_tail()
+            rope.memorize_tail_position()
     return ropes
+
+
+def show_me(wts):
+    grid_size = 28
+
+    res = []
+    for x in range(0, grid_size - 6):
+        line = []
+        for y in range(0, grid_size):
+            line.append(".")
+        res.append(line)
+
+    for a in wts:
+        x, y = a.split(":")
+        res[15 - int(y)][15 - int(x)] = "#"
+
+    for l in res:
+        s = ""
+        for a in l:
+            s = a + s
+        print(s)
 
 
 def main():
@@ -80,27 +102,8 @@ def main():
     print("Part One:", part_one)
     print("Part Two:", part_two)
 
+    show_me(ropes[0].where_tail_was)
 
-    wts = ropes[0].where_tail_was
-    grid_size = 28
-
-    res = []
-    for x in range(0, grid_size - 6):
-        line = []
-        for y in range(0, grid_size):
-            line.append(".")
-        res.append(line)
-
-    for a in wts:
-        x,y = a.split(":")
-        res[15 - int(y)][15 - int(x)] = "#"
-
-
-    for l in res:
-        s = ""
-        for a in l:
-            s = a + s
-        print(s)
 
 
 if __name__ == "__main__":
