@@ -37,21 +37,32 @@ class Monkey:
         self.throw_to_A = int(if_true_to_A)      # throw to monkey A
         self.throw_to_B = int(if_false_to_B)     # throw to monkey B
         self.items_inspected = 0
+        self.simplifying_coefficient = 1
 
-    def inspect_and_throw(self):
+    def inspect_and_throw(self, part_to_solve):
         throwing_items = [] # throw to, worry level      [1, 123]  w.l. 123 throw to monkey #1
+
+        relief_coefficient = 1
+        if part_to_solve == 1:
+            relief_coefficient = 3
+
         self.items_inspected += len(self.starting_items)
         for item_str in self.starting_items:
             item = int(item_str)
             #print("Monkey inspects an item with a worry level of ", item)
-            worry_level = self.adjust_worry_level(item)
+
+
+
+            worry_level = self.adjust_worry_level(item, relief_coefficient)
             ops = self.operation.split(" ")
             #print("Worry level is ", ops[0]," by ", ops[1],  " to  ", worry_level)
             throw_to = self.throw_to_A
-            if worry_level % int(self.test):
+            if worry_level % self.test:
                 throw_to = self.throw_to_B
 
             #throw
+
+
             throwing_items.append([throw_to, worry_level])
             #print("Item with worry level  ",worry_level, "thrown to monkey ", throw_to)
 
@@ -60,12 +71,8 @@ class Monkey:
 
         return throwing_items
 
-    def throw_item(self, item, worry_level, throw_to):
-        del self.starting_items[item]
-        return worry_level, throw_to
 
-
-    def adjust_worry_level(self, level):
+    def adjust_worry_level(self, level, relief_coefficient):
         old, operation, value_str = self.operation.split(" ")
         if value_str == "old":
             value = level
@@ -78,16 +85,19 @@ class Monkey:
         if operation == "*":
             new_level = level * value
 
-        new_level = new_level // 3
+        new_level = new_level // relief_coefficient
+
+        if relief_coefficient == 1:
+            new_level = new_level % self.simplifying_coefficient
 
         return new_level
 
-def print_monkeys(monkeys: Monkey):
-    for monkey in monkeys:
-        items = "Monkey " + str(monkey.number) + ": "
-        for item in monkey.starting_items:
-            items += str(item) + " "
-        print(items)
+# def print_monkeys(monkeys: Monkey):
+#     for monkey in monkeys:
+#         items = "Monkey " + str(monkey.number) + ": "
+#         for item in monkey.starting_items:
+#             items += str(item) + " "
+#         print(items)
 
 def inspected_items_status(monkeys: Monkey):
     i = 0
@@ -109,17 +119,25 @@ def main():
 
     monkeys = parse_file(file_name)
 
-    for round in range(1,21):
+    simpl_coeff = 1
+    for m in monkeys:
+        simpl_coeff *= m.test
+
+    for m in monkeys:
+        m.simplifying_coefficient = simpl_coeff
+
+    for round in range(1,10001):
         for monkey in monkeys:
-            throwing_items = monkey.inspect_and_throw()
+            throwing_items = monkey.inspect_and_throw(part_to_solve=2)
             for item in throwing_items:
                 throw_to = item[0]
                 worry_level = item[1]
                 monkeys[throw_to].starting_items.append(worry_level)
-        #print("Round: ", round )
-        #print_monkeys(monkeys)
+
 
     part_one = inspected_items_status(monkeys)
+
+
 
     print("----------------------------")
     print("Part One:", part_one)
