@@ -51,11 +51,7 @@ def get_neighbours(path, the_map):
     return res
 
 
-def main():
-    file_name = "Day12-input-p.txt"
-    the_map, xy_s, xy_e = parse_file(file_name)
-
-    the_path = [[xy_s[1], xy_s[0]]]
+def get_shortest_path(the_path, the_map):
     counter = 0
     part_one = 0
     while len(the_path) > 0 and part_one == 0:
@@ -63,10 +59,29 @@ def main():
         the_path = the_new_path
         for destination in the_path:
             if the_map[destination[0]][destination[1]] == 27:
-                part_one = counter + 1
+                return counter + 1
         counter += 1
+    return -1
 
-    part_two = 1
+
+def main():
+    file_name = "Day12-input-p.txt"
+    the_map, xy_s, xy_e = parse_file(file_name)
+
+    the_path = [[xy_s[1], xy_s[0]]]
+
+    part_one = get_shortest_path(the_path, the_map)
+
+    the_map, xy_s, xy_e = parse_file(file_name)
+    the_path = []
+    for x in range(0, len(the_map) - 1):
+        for y in range(0, len(the_map[0]) - 1):
+            if the_map[x][y] == 1:
+                the_path.append([x,y])
+
+    part_two = get_shortest_path(the_path, the_map)
+
+
 
     print("----------------------------")
     print("Part One:", part_one)
