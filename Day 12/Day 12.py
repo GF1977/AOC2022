@@ -120,21 +120,22 @@ def get_my_path2(map2, candidates, count):
     res = []
     for sector_id in candidates:
         sector = map2[sector_id]
-        for maybe_go_here_id in sector.neighbours:
-            if map2[maybe_go_here_id].value < 99:
-                if sector.value >= map2[maybe_go_here_id].value or sector.value == map2[maybe_go_here_id].value - 1:
-                    if maybe_go_here_id not in res:
-                        res.append(maybe_go_here_id)
-                    if map2[maybe_go_here_id].value == 27:
-                        return [], count
-        sector.value = 99
+        if sector.value < 99:
+            for maybe_go_here_id in sector.neighbours:
+                #if map2[maybe_go_here_id].value < 99:
+                    if sector.value >= map2[maybe_go_here_id].value or sector.value == map2[maybe_go_here_id].value - 1:
+                        if maybe_go_here_id not in res:
+                                res.append(maybe_go_here_id)
+                        if map2[maybe_go_here_id].value == 27:
+                            return [], count
+            sector.value = 99
 
 
     return res, count + 1
 
 
 def main():
-    file_name = "Day12-input-d.txt"
+    file_name = "Day12-input-p.txt"
     the_map, xy_s, xy_e = parse_file(file_name)
 
     map2, start_point_id = parse_file2(file_name)
@@ -142,6 +143,22 @@ def main():
     count = 1
     while len(res) > 0:
         res, count = get_my_path2(map2, res, count)
+
+    print("Way 2, part one: ", count)
+
+    map2, start_point_id = parse_file2(file_name)
+    res = []
+    for s in map2:
+        if map2[s].value <= 1:
+            res.append(s)
+
+    #res = list(filter(lambda l: l > 0 and l <= x * y, candidates))
+
+    count = 1
+    while len(res) > 0:
+        res, count = get_my_path2(map2, res, count)
+
+    print("Way 2, part two: ", count)
 
 
     the_path = [[xy_s[1], xy_s[0]]]
@@ -166,5 +183,5 @@ if __name__ == "__main__":
     main()
 
 # Answers:
-# Part One:
-# Part Two:
+# Part One: 383
+# Part Two: 377
