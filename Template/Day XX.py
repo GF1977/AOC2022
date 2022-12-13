@@ -6,7 +6,7 @@ def parse_file(file_to_process):
 
 
 def main():
-    file_name = "DayXX-input-p.txt"
+    file_name = "DayXX-input-d.txt"
     data_input = parse_file(file_name)
     part_one = 0
     part_two = 1
