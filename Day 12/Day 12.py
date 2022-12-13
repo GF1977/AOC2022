@@ -20,7 +20,7 @@ def get_neighbours_ids(sector_id, x, y):
     if sector_id % x == 0:  # right edge
         candidates.remove(sector_id + 1)
 
-    res = list(filter(lambda l: 0 < l <= x * y, candidates)) # removing the candidates which are out of the map
+    res = list(filter(lambda l: 0 < l <= x * y, candidates))  # removing the candidates which are out of the map
     return res
 
 
@@ -39,13 +39,13 @@ def parse_file(file_to_process):
                 value = 27  # the task is solved when we step into 27 only
 
             sector = Sector(value, [])
-            sector.neighbours = get_neighbours_ids(sector.id, x=len(data[0]) , y=len(data))
+            sector.neighbours = get_neighbours_ids(sector.id, x=len(data[0]), y=len(data))
             the_map[sector.id] = sector
 
     return the_map
 
 
-def get_my_path(the_map, candidates_id, count):
+def get_my_path(the_map, candidates_id, count=0):
     count = count + 1
     res = []
     for sector_id in candidates_id:
@@ -53,10 +53,10 @@ def get_my_path(the_map, candidates_id, count):
         if not sector.visited:
             for destination_id in sector.neighbours:
                 if sector.value >= the_map[destination_id].value or sector.value == the_map[destination_id].value - 1:
-                    if destination_id not in res:
-                        res.append(destination_id)
                     if the_map[destination_id].value == 27:
                         return count
+                    if destination_id not in res:
+                        res.append(destination_id)
             sector.visited = True
 
     return get_my_path(the_map, res, count)
@@ -67,13 +67,13 @@ def main():
     the_map = parse_file(file_name)
 
     res = list(filter(lambda l: the_map[l].value == 0, the_map))  # adding 'E' as starting points
-    part_one = get_my_path(the_map, res, 0)
+    part_one = get_my_path(the_map, res)
 
     for sector_id in the_map:
         the_map[sector_id].visited = False
 
     res = list(filter(lambda l: the_map[l].value <= 1, the_map))  # adding 'E' and all 'a' as starting points
-    part_two = get_my_path(the_map, res, 0)
+    part_two = get_my_path(the_map, res)
 
     print("----------------------------")
     print("Part One:", part_one)
