@@ -1,6 +1,11 @@
+import itertools
+
+
 class Sector:
-    def __init__(self, sector_id, value, neighbours):
-        self.id = sector_id
+    id_iter = itertools.count()
+
+    def __init__(self, value, neighbours):
+        self.id = Sector.id_iter.__next__() + 1
         self.value = value
         self.neighbours = neighbours
         self.visited = False
@@ -10,72 +15,65 @@ def get_neighbours_ids(sector_id, x, y):
     candidates = [sector_id - 1, sector_id + 1, sector_id - x, sector_id + x]
 
     if sector_id % x == 1:  # left edge
-        candidates = [sector_id + 1, sector_id - x, sector_id + x]
+        candidates.remove(sector_id - 1)
 
     if sector_id % x == 0:  # right edge
-        candidates = [sector_id - 1, sector_id - x, sector_id + x]
+        candidates.remove(sector_id + 1)
 
-    res = list(filter(lambda l: 0 < l <= x * y, candidates))
+    res = list(filter(lambda l: 0 < l <= x * y, candidates)) # removing the candidates which are out of the map
     return res
 
 
-def parse_file2(file_to_process):
+def parse_file(file_to_process):
     file = open(file_to_process, mode="r")
     data: list[str] = file.read().split("\n")
 
-    y = len(data)
-    x = len(data[0])
+    the_map = {}
 
-    start_id = 0
-    res = {}
-    sector_id = 1
     for line in data:
         for letter in line:
             value = ord(letter) - 96  # a = 1; z = 26
             if letter == "S":
                 value = 0
-                start_id = sector_id
             if letter == "E":
                 value = 27  # the task is solved when we step into 27 only
 
-            neighbours = get_neighbours_ids(sector_id, x, y)
-            sector = Sector(sector_id, value, neighbours)
-            res[sector_id] = sector
-            sector_id += 1
-    return res, start_id
+            sector = Sector(value, [])
+            sector.neighbours = get_neighbours_ids(sector.id, x=len(data[0]) , y=len(data))
+            the_map[sector.id] = sector
+
+    return the_map
 
 
-def get_my_path2(map2, candidates, count):
+def get_my_path(the_map, candidates_id, count):
+    count = count + 1
     res = []
-    for sector_id in candidates:
-        sector = map2[sector_id]
+    for sector_id in candidates_id:
+        sector = the_map[sector_id]
         if not sector.visited:
-            for maybe_go_here_id in sector.neighbours:
-                if sector.value >= map2[maybe_go_here_id].value or sector.value == map2[maybe_go_here_id].value - 1:
-                    if maybe_go_here_id not in res:
-                        res.append(maybe_go_here_id)
-                    if map2[maybe_go_here_id].value == 27:
-                        return [], count
+            for destination_id in sector.neighbours:
+                if sector.value >= the_map[destination_id].value or sector.value == the_map[destination_id].value - 1:
+                    if destination_id not in res:
+                        res.append(destination_id)
+                    if the_map[destination_id].value == 27:
+                        return count
             sector.visited = True
 
-    return res, count + 1
+    return get_my_path(the_map, res, count)
 
 
 def main():
     file_name = "Day12-input-p.txt"
+    the_map = parse_file(file_name)
 
-    map2, start_point_id = parse_file2(file_name)
-    res = [start_point_id]
-    part_one = 1
-    while len(res) > 0:
-        res, part_one = get_my_path2(map2, res, part_one)
+    res = list(filter(lambda l: the_map[l].value == 0, the_map))  # adding 'E' as starting points
+    part_one = get_my_path(the_map, res, 0)
 
-    map2, start_point_id = parse_file2(file_name)
-    res = list(filter(lambda l: map2[l].value <= 1, map2))
+    for sector_id in the_map:
+        the_map[sector_id].visited = False
 
-    part_two = 1
-    while len(res) > 0:
-        res, part_two = get_my_path2(map2, res, part_two)
+    res = list(filter(lambda l: the_map[l].value <= 1, the_map))  # adding 'E' and all 'a' as starting points
+    part_two = get_my_path(the_map, res, 0)
 
     print("----------------------------")
     print("Part One:", part_one)
