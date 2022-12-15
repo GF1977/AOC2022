@@ -42,9 +42,11 @@ def parse_file(file_to_process):
                 min_y = y
 
     the_map = []
-    row = ["."] * (max_x + 1)
     for r in range(0, max_y + 1):
-        the_map.append(row)
+        tmp = []
+        the_map.append(tmp)
+        for c in range(0, max_x + 1):
+            the_map[r].append(".")
 
     for line in data:
         crd = line.split(" -> ")
@@ -52,16 +54,14 @@ def parse_file(file_to_process):
             xy_str_a = crd[i]
             xy_str_b = crd[i + 1]
             the_map = draw_line(the_map, xy_str_a.split(","), xy_str_b.split(","))
-            break
-        break
 
+    the_map[0][500] = "+"
 
-    for x in range(min_x - 1, max_x + 1):
+    for y in range(0, max_y + 1):
         row = ""
-        for y in range(min_y - 13 , max_y + 1):
+        for x in range(min_x - 1, max_x + 1):
             row += the_map[y][x]
         print(row)
-
 
     return the_map
 
@@ -72,7 +72,7 @@ def main():
     part_one = 0
     part_two = 1
 
-    print("----------------------------")
+
     print("Part One:", part_one)
     print("Part Two:", part_two)
 
