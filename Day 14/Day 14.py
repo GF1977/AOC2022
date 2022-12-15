@@ -97,8 +97,6 @@ def parse_file(file_to_process):
             for c in range(0, max_x + 500):
                 the_map.map[r].append(".")
 
-    the_map.map.append("tmp")
-
     for line in data:
         crd = line.split(" -> ")
         for i in range(0, len(crd) - 1):
