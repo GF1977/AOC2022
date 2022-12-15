@@ -42,39 +42,35 @@ class Map:
             if res:
                 break
 
-
         return self.sand_units
 
-    def roll_sand_block(self, y,x):
-        if self.sand_units % 10 == 0:
-            self.draw_the_map()
-        #print("X = ", x, "  Y = ", y)
-        if x <= self.min_x:
-            return True
+    def roll_sand_block(self, y, x):
+        while True:
+            if x <= self.min_x:
+                return True
 
-        repeat = True
-        while repeat:
-
-            #check below
-            if self.map[y+1][x] == ".":
-                self.roll_sand_block(y + 1,x)
+            # check below
+            if self.map[y + 1][x] == ".":
+                y = y + 1
+                continue
 
             # check left
-            if  self.map[y + 1][x - 1] == ".":
-                if self.roll_sand_block(y + 1,x - 1):
-                    return True
+            if self.map[y + 1][x - 1] == ".":
+                y = y + 1
+                x = x - 1
+                continue
 
             # check right
-            elif self.map[y + 1][x + 1] == ".":
-                if self.roll_sand_block(y + 1, x + 1):
-                    return True
+            if self.map[y + 1][x + 1] == ".":
+                y = y + 1
+                x = x + 1
+                continue
+            break
 
-            else:
-                self.map[y][x] = "o"
-                self.sand_units+=1
-                repeat = False
-
+        self.map[y][x] = "o"
+        self.sand_units += 1
         return False
+
 
 def parse_file(file_to_process):
     file = open(file_to_process, mode="r")
@@ -126,7 +122,7 @@ def parse_file(file_to_process):
 
 
 def main():
-    file_name = "Day14-Input-d.txt"
+    file_name = "Day14-Input-p.txt"
     the_map = parse_file(file_name)
 
     part_one = the_map.sand_flow()
