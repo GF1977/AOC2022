@@ -8,56 +8,30 @@ class Map:
         self.sand_units = 0
         self.part_one = 0
 
-    def draw_line(self, a, b):
-        x_a = int(a[0])
-        y_a = int(a[1])
-        x_b = int(b[0])
-        y_b = int(b[1])
+    # placing the rocks as line from a to b
+    def put_rocks_on_map(self, a, b):
+        x_a, y_a = int(a[0]), int(a[1])
+        x_b, y_b = int(b[0]), int(b[1])
 
-        if x_a == x_b:
-            for y in range(min(y_a, y_b), max(y_a, y_b) + 1):
-                self.map[y][x_a] = "#"
-
-        if y_a == y_b:
+        for y in range(min(y_a, y_b), max(y_a, y_b) + 1):
             for x in range(min(x_a, x_b), max(x_a, x_b) + 1):
-                self.map[y_a][x] = "#"
-
+                self.map[y][x] = "#"
         return self.map
 
-    def draw_the_map(self):
-        for y in range(0, self.max_y + 3):
-            row = ""
-            for x in range(self.min_x - 10, self.max_x + 10):
-                row += self.map[y][x]
-            print(row)
-        print(" ")
-
     def sand_flow(self):
-        res = 0
         while True:
-            sand_crd = [0, 500]
-            y = sand_crd[0]
-            x = sand_crd[1]
-
+            sand_crd_xy = [0, 500]
+            # checking is there free space for sand right at the source "+"
             if self.map[0][500] != ".":
-                break
+                break  # nope
+            self.fall_sand_block(sand_crd_xy[0], sand_crd_xy[1])  # yes
+        return self.part_one, self.sand_units
 
-            self.roll_sand_block(y, x)
-
-        print("Part One:", self.part_one)
-        print("Part Two:", self.sand_units)
-
-
-    def roll_sand_block(self, y, x):
+    def fall_sand_block(self, y, x):
         while True:
-            #self.draw_the_map()
+            # checking if sand starts falling into the void (first part of the puzzle)
             if x <= self.min_x and self.part_one == 0:
                 self.part_one = self.sand_units
-
-
-            # if self.sand_units >= 25:
-            #     return 2
-
 
             # check below
             if self.map[y + 1][x] == ".":
@@ -75,6 +49,7 @@ class Map:
                 y = y + 1
                 x = x + 1
                 continue
+
             break
 
         self.map[y][x] = "o"
@@ -86,8 +61,8 @@ def parse_file(file_to_process):
     file = open(file_to_process, mode="r")
     data: list[str] = file.read().split("\n")
 
-    min_x = 999
-    min_y = 999
+    min_x = 99999
+    min_y = 99999
     max_x = 0
     max_y = 0
 
@@ -122,8 +97,6 @@ def parse_file(file_to_process):
             for c in range(0, max_x + 500):
                 the_map.map[r].append(".")
 
-
-
     the_map.map.append("tmp")
 
     for line in data:
@@ -131,11 +104,7 @@ def parse_file(file_to_process):
         for i in range(0, len(crd) - 1):
             xy_str_a = crd[i]
             xy_str_b = crd[i + 1]
-            the_map.map = the_map.draw_line(xy_str_a.split(","), xy_str_b.split(","))
-
-    #the_map.map[0][500] = "+"
-
-    #the_map.draw_the_map()
+            the_map.map = the_map.put_rocks_on_map(xy_str_a.split(","), xy_str_b.split(","))
 
     return the_map
 
@@ -144,12 +113,10 @@ def main():
     file_name = "Day14-Input-p.txt"
     the_map = parse_file(file_name)
 
-    the_map.sand_flow()
+    part_one, part_two = the_map.sand_flow()
 
-    #part_two = 1
-
-    #print("Part One:", part_one)
-    #print("Part Two:", part_two)
+    print("Part One:", part_one)
+    print("Part Two:", part_two)
 
 
 if __name__ == "__main__":
@@ -157,4 +124,4 @@ if __name__ == "__main__":
 
 # Answers:
 # Part One: 1298
-# Part Two:
+# Part Two: 25585
