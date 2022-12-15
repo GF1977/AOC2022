@@ -6,6 +6,7 @@ class Map:
         self.min_y = min_y
         self.map = []
         self.sand_units = 0
+        self.part_one = 0
 
     def draw_line(self, a, b):
         x_a = int(a[0])
@@ -24,9 +25,9 @@ class Map:
         return self.map
 
     def draw_the_map(self):
-        for y in range(0, self.max_y + 1):
+        for y in range(0, self.max_y + 3):
             row = ""
-            for x in range(self.min_x - 1, self.max_x + 1):
+            for x in range(self.min_x - 10, self.max_x + 10):
                 row += self.map[y][x]
             print(row)
         print(" ")
@@ -37,17 +38,26 @@ class Map:
             sand_crd = [0, 500]
             y = sand_crd[0]
             x = sand_crd[1]
-            res = self.roll_sand_block(y, x)
 
-            if res:
+            if self.map[0][500] != ".":
                 break
 
-        return self.sand_units
+            self.roll_sand_block(y, x)
+
+        print("Part One:", self.part_one)
+        print("Part Two:", self.sand_units)
+
 
     def roll_sand_block(self, y, x):
         while True:
-            if x <= self.min_x:
-                return True
+            #self.draw_the_map()
+            if x <= self.min_x and self.part_one == 0:
+                self.part_one = self.sand_units
+
+
+            # if self.sand_units >= 25:
+            #     return 2
+
 
             # check below
             if self.map[y + 1][x] == ".":
@@ -101,11 +111,20 @@ def parse_file(file_to_process):
     the_map = Map(max_x, max_y, min_x, min_y)
 
     the_map.map = []
-    for r in range(0, max_y + 1):
+    for r in range(0, max_y + 3):
         tmp = []
         the_map.map.append(tmp)
-        for c in range(0, max_x + 1):
-            the_map.map[r].append(".")
+        # floor
+        if r == max_y + 2:
+            for c in range(0, max_x + 500):
+                the_map.map[r].append("#")
+        else:
+            for c in range(0, max_x + 500):
+                the_map.map[r].append(".")
+
+
+
+    the_map.map.append("tmp")
 
     for line in data:
         crd = line.split(" -> ")
@@ -114,9 +133,9 @@ def parse_file(file_to_process):
             xy_str_b = crd[i + 1]
             the_map.map = the_map.draw_line(xy_str_a.split(","), xy_str_b.split(","))
 
-    the_map.map[0][500] = "+"
+    #the_map.map[0][500] = "+"
 
-    the_map.draw_the_map()
+    #the_map.draw_the_map()
 
     return the_map
 
@@ -125,17 +144,17 @@ def main():
     file_name = "Day14-Input-p.txt"
     the_map = parse_file(file_name)
 
-    part_one = the_map.sand_flow()
+    the_map.sand_flow()
 
-    part_two = 1
+    #part_two = 1
 
-    print("Part One:", part_one)
-    print("Part Two:", part_two)
+    #print("Part One:", part_one)
+    #print("Part Two:", part_two)
 
 
 if __name__ == "__main__":
     main()
 
 # Answers:
-# Part One:
+# Part One: 1298
 # Part Two:
