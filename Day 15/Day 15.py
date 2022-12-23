@@ -15,21 +15,6 @@ def parse_file(file_to_process):
 
 
 def get_start_end(crd, r_y):
-    # s_x = crd[0]
-    # s_y = crd[1]
-    # b_x = crd[2]
-    # b_y = crd[3]
-
-    # len_b = 2 * abs(s_x - b_x) + 1
-    # len_s = len_b + 2 * abs(s_y - b_y)
-    # len_r = len_s - 2 * abs(s_y - r_y)
-    # start_s_x = s_x - (len_s - 1) // 2
-    # end_s_x = s_x + (len_s - 1) // 2
-    # start_r_x = start_s_x + abs(len_s - len_r) // 2
-    # end_r_x = end_s_x - abs(len_s - len_b) // 2
-
-    s_x = 0
-    s_y = 0
     b_x = abs(crd[2] - crd[0])
     b_y = abs(crd[3] - crd[1])
     r_y = abs(r_y - crd[1])
@@ -40,45 +25,40 @@ def get_start_end(crd, r_y):
     if end_r_x < start_r_x:
         return None
 
-    return [start_r_x +  crd[0], end_r_x +  crd[0]]
+    return [start_r_x + crd[0], end_r_x + crd[0]]
 
 
-def is_overlapped(A, B):
-    # checking if a range A is overlapped with sector B
+def is_overlapped(a, b):
+    # checking if a range A is overlapped with range B
     # [-3,5] and [0,3] = yes
     # [-3,5] and [3,13] = yes
     # [-3,5] and [7,13] = no
 
-    if A[0] <= B[0] and A[1] >= B[0]:
+    if abs(a[0] - b[1]) == 1 or abs(a[1] - b[0]) == 1:
         return True
 
-    if B[0] <= A[0] and B[1] >= A[0]:
+    if a[0] <= b[0] <= a[1] or b[0] <= a[0] <= b[1]:
         return True
 
 
-def get_unique_covered_positions(coverage_line, result=0):
-    result = 0
-
-    for i in range(0, len(coverage_line) - 1):
-        if is_overlapped(coverage_line[i], coverage_line[i + 1]):
-            coverage_line[i + 1][0] = min(coverage_line[i][0], coverage_line[i + 1][0])
-            coverage_line[i + 1][1] = max(coverage_line[i][1], coverage_line[i + 1][1])
-            coverage_line.remove(coverage_line[i])
-            break
+def get_unique_covered_positions(coverage_line):
+    result = []
+    while len(coverage_line) > 1:
+        if is_overlapped(coverage_line[0], coverage_line[1]):
+            coverage_line[1][0] = min(coverage_line[0][0], coverage_line[1][0])
+            coverage_line[1][1] = max(coverage_line[0][1], coverage_line[1][1])
         else:
-            result = abs(coverage_line[0][0] - coverage_line[0][1])
-            coverage_line.remove(coverage_line[i])
-            break
+            result.append(coverage_line[0])
 
-    if len(coverage_line) > 1:
-        result = get_unique_covered_positions(coverage_line, result)
+        coverage_line.remove(coverage_line[0])
 
-    return abs(coverage_line[0][0] - coverage_line[0][1])
+    result.append(coverage_line[0])
+    return result
 
 
 def get_whole_range(coverage_line):
     start = coverage_line[0][0]
-    end =  coverage_line[0][1]
+    end = coverage_line[0][1]
 
     for a in coverage_line:
         if a[1] > end:
@@ -86,28 +66,48 @@ def get_whole_range(coverage_line):
 
     return end - start
 
-def main():
-    file_name = "Day15-Input-d.txt"
-    data_input = parse_file(file_name)
 
+def get_coverage_line(data_input, line_number):
     coverage_line = []
-
-    line_number = 2000000
-    line_number = 10
-
     for crd in data_input:
         a = get_start_end(crd, line_number)
-        # print(crd)
-        print(crd, a)
         if a is not None:
             coverage_line.append(a)
 
-
     coverage_line.sort()
+    return coverage_line
 
-    part_two = get_whole_range(coverage_line)
-    part_one = get_unique_covered_positions(coverage_line) # 4,757,854
 
+def get_safe_positions(the_line):
+    res = 0
+    for segment in the_line:
+        res += abs(segment[0] - segment[1])
+
+    return res
+
+
+def main():
+    file_name = "Day15-Input-p.txt"
+    data_input = parse_file(file_name)
+
+    line_number = 2000000
+    #line_number = 10
+
+    coverage_line = get_coverage_line(data_input, line_number)
+
+    res = get_unique_covered_positions(coverage_line)
+    part_one = get_safe_positions(res)
+    part_two = 0
+
+    for line_number in range(3000000, 4000000):
+
+        coverage_line = get_coverage_line(data_input, line_number)
+        A = get_whole_range(coverage_line)
+        res = get_unique_covered_positions(coverage_line)
+        B = get_safe_positions(res)
+        if A != B:
+            part_two = (res[0][1] + 1) * 4000000 + line_number
+            break
 
     print("----------------------------")
     print("Part One:", part_one)
@@ -119,4 +119,4 @@ if __name__ == "__main__":
 
 # Answers:
 # Part One: 5144286
-# Part Two:
+# Part Two: 10229191267339
