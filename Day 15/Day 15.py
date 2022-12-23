@@ -1,3 +1,13 @@
+import copy
+import time
+
+
+class XY:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+
 def parse_file(file_to_process):
     file = open(file_to_process, mode="r")
     data: list[str] = file.read().split("\n")
@@ -9,31 +19,33 @@ def parse_file(file_to_process):
         s_y = int(tmp[0].split(", ")[1].split("=")[1])
         b_x = int(tmp[1].split(", ")[0].split("=")[1])
         b_y = int(tmp[1].split(", ")[1].split("=")[1])
-        coordinates.append([s_x, s_y, b_x, b_y])
+        coordinates.append([XY(s_x, s_y), XY(b_x, b_y)])
 
     return coordinates
 
 
-def get_start_end(crd, r_y):
-    b_x = abs(crd[2] - crd[0])
-    b_y = abs(crd[3] - crd[1])
-    r_y = abs(r_y - crd[1])
+def get_start_end(crd_sensor, crd_beacon, r_y):
+    # for a given coordinates return the X coordinates (start, end) on a line where Y = r_y
+    # to simplify the math, lets made calculation moving Sensor to [0,0] and adjust beacon and r_y accordingly
+    b_x = abs(crd_beacon.x - crd_sensor.x)
+    b_y = abs(crd_beacon.y - crd_sensor.y)
+    r_y = abs(r_y - crd_sensor.y)
 
     end_r_x = b_x + (b_y - r_y)
     start_r_x = -end_r_x
 
+    # if r_y doesn't cross the sensor coverage, there is no result
     if end_r_x < start_r_x:
         return None
 
-    return [start_r_x + crd[0], end_r_x + crd[0]]
+    # it is important to preserve the initial X,Y of a sensor to locate them on the coverage map correctly
+    return [start_r_x + crd_sensor.x, end_r_x + crd_sensor.x]
 
 
 def is_overlapped(a, b):
-    # checking if a range A is overlapped with range B
-    # [-3,5] and [0,3] = yes
-    # [-3,5] and [3,13] = yes
-    # [-3,5] and [7,13] = no
+    # checking if a range A is overlapped or connected with range B
 
+    # for cases where the coordinates are connected [1, 100] & [101,299] or [-5,-2][-1,22]
     if abs(a[0] - b[1]) == 1 or abs(a[1] - b[0]) == 1:
         return True
 
@@ -41,22 +53,37 @@ def is_overlapped(a, b):
         return True
 
 
-def get_unique_covered_positions(coverage_line):
+def get_ranges(data_input, y_coordinate):
+    # return the set of ranges which don't overlap or connect each other
+    # converting the raw coordinates into a set of coverage ranges for a given Y coordinate
+    ranges = []
     result = []
-    while len(coverage_line) > 1:
-        if is_overlapped(coverage_line[0], coverage_line[1]):
-            coverage_line[1][0] = min(coverage_line[0][0], coverage_line[1][0])
-            coverage_line[1][1] = max(coverage_line[0][1], coverage_line[1][1])
+    for crd in data_input:
+        new_range = get_start_end(crd_sensor=crd[0], crd_beacon=crd[1], r_y=y_coordinate)
+        if new_range is not None:
+            ranges.append(new_range)
+
+    ranges.sort()
+
+    range_a = ranges[0]
+
+    for i in range(0, len(ranges)):
+        range_b = copy.copy(ranges[i])
+        if is_overlapped(range_a, range_b):
+            range_b[0] = range_a[0]
+            range_b[1] = max(range_a[1], range_b[1])
+
         else:
-            result.append(coverage_line[0])
+            result.append(range_a)
+        range_a = range_b
 
-        coverage_line.remove(coverage_line[0])
-
-    result.append(coverage_line[0])
+    result.append(range_a)
     return result
 
 
 def get_whole_range(coverage_line):
+    # return the distance between the most left and most right ranges
+    # [1,100] [200,300] [300,304]  = > the range is  [1,304], the distance is 304 - 1 = 303
     start = coverage_line[0][0]
     end = coverage_line[0][1]
 
@@ -67,21 +94,11 @@ def get_whole_range(coverage_line):
     return end - start
 
 
-def get_coverage_line(data_input, line_number):
-    coverage_line = []
-    for crd in data_input:
-        a = get_start_end(crd, line_number)
-        if a is not None:
-            coverage_line.append(a)
-
-    coverage_line.sort()
-    return coverage_line
-
-
-def get_safe_positions(the_line):
+def get_coverage_distance(ranges):
+    # return the total distance of the all ranges
     res = 0
-    for segment in the_line:
-        res += abs(segment[0] - segment[1])
+    for a_range in ranges:
+        res += abs(a_range[0] - a_range[1])
 
     return res
 
@@ -91,27 +108,23 @@ def main():
     data_input = parse_file(file_name)
 
     line_number = 2000000
-    #line_number = 10
 
-    coverage_line = get_coverage_line(data_input, line_number)
+    res = get_ranges(data_input, line_number)
 
-    res = get_unique_covered_positions(coverage_line)
-    part_one = get_safe_positions(res)
+    part_one = get_coverage_distance(res)
     part_two = 0
 
-    for line_number in range(3000000, 4000000):
-
-        coverage_line = get_coverage_line(data_input, line_number)
-        A = get_whole_range(coverage_line)
-        res = get_unique_covered_positions(coverage_line)
-        B = get_safe_positions(res)
-        if A != B:
+    start_time = time.time()
+    for line_number in range(0, 4000000):
+        res = get_ranges(data_input, line_number)
+        if len(res) == 2 and abs(res[0][1] - res[1][0]) == 2:
             part_two = (res[0][1] + 1) * 4000000 + line_number
             break
 
     print("----------------------------")
     print("Part One:", part_one)
     print("Part Two:", part_two)
+    print("--- %s seconds ---" % (time.time() - start_time))
 
 
 if __name__ == "__main__":
