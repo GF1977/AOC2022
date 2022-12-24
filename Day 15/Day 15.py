@@ -1,4 +1,6 @@
 import copy
+import ctypes.wintypes
+from multiprocessing import Process, Value
 import time
 
 
@@ -103,28 +105,46 @@ def get_coverage_distance(ranges):
     return res
 
 
+def scan_the_range(data_input, start, end, result):
+    for line_number in range(start, end):
+        res = get_ranges(data_input, line_number)
+        # condition of success is - there are only two ranges with single gap
+        # Example:  [0,1000] [1002,2222]  => Gap is [1001,1001]
+        if len(res) == 2 and abs(res[0][1] - res[1][0]) == 2:
+            result.value = (res[0][1] + 1) * 4000000 + line_number
+            break
+
+
 def main():
     file_name = "Day15-Input-p.txt"
     data_input = parse_file(file_name)
-
     line_number = 2000000
 
     res = get_ranges(data_input, line_number)
-
     part_one = get_coverage_distance(res)
+
     part_two = 0
 
+    lst_processes = []
     start_time = time.time()
-    for line_number in range(0, 4000000):
-        res = get_ranges(data_input, line_number)
-        if len(res) == 2 and abs(res[0][1] - res[1][0]) == 2:
-            part_two = (res[0][1] + 1) * 4000000 + line_number
+    result = Value(ctypes.c_int64, 0)
+    for i in range(0, 20):
+        start = i * 200000
+        end = (i + 1) * 200000
+        obj_process = Process(target=scan_the_range, args=(data_input, start, end, result,))
+        lst_processes.append(obj_process)
+        obj_process.start()
+
+    for obj_process in lst_processes:
+        obj_process.join()
+        if result.value > 0:
+            part_two = result.value
             break
 
     print("----------------------------")
     print("Part One:", part_one)
     print("Part Two:", part_two)
-    print("--- %s seconds ---" % (time.time() - start_time))
+    print("--- Execution time: %s seconds ---" % (time.time() - start_time))
 
 
 if __name__ == "__main__":
