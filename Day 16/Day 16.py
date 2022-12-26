@@ -62,6 +62,9 @@ def get_total_pressure(valves, distances, best_path, minutes_limit=30):
     for i in range(0, len(best_path) - 1):
         v_from = best_path[i]
         v_to = best_path[i + 1]
+        if (v_from+v_to) not in distances:
+            continue
+
         distance = distances[v_from+v_to]
         if distance > minutes_limit:
             break
@@ -82,7 +85,7 @@ def get_total_pressure(valves, distances, best_path, minutes_limit=30):
     return total_pressure
 
 
-def get_the_maximum_pressure(valves, distances,  flow_rate_to_ignore=0, path_len=6):
+def get_the_maximum_pressure(valves, distances,  flow_rate_to_ignore=0):
     start_time = time.time()
     valves_with_flow = []
     for v in valves:
@@ -90,7 +93,7 @@ def get_the_maximum_pressure(valves, distances,  flow_rate_to_ignore=0, path_len
             valves_with_flow.append(v)
 
     best_pressure = 0
-
+    path_len = len(valves_with_flow)
     all_paths = itertools.permutations(valves_with_flow, path_len)
 
     for best_path in all_paths:
@@ -105,7 +108,7 @@ def get_the_maximum_pressure(valves, distances,  flow_rate_to_ignore=0, path_len
             print("--- %s seconds ---" % (time.time() - start_time))
     return best_pressure
 
-def get_the_maximum_pressure2(valves, distances,  flow_rate_to_ignore=0, path_len=6):
+def get_the_maximum_pressure2(valves, distances,  flow_rate_to_ignore=0):
     start_time = time.time()
     valves_with_flow = []
     for v in valves:
@@ -113,9 +116,10 @@ def get_the_maximum_pressure2(valves, distances,  flow_rate_to_ignore=0, path_le
             valves_with_flow.append(v)
 
     best_pressure = 0
+    path_len = len(valves_with_flow)
 
     my_paths = itertools.permutations(valves_with_flow, path_len)
-    half_len  = path_len //2
+    half_len  = path_len // 2
 
     for my_path in my_paths:
         a = list(my_path)[:3]
@@ -123,7 +127,7 @@ def get_the_maximum_pressure2(valves, distances,  flow_rate_to_ignore=0, path_le
         el_paths = itertools.permutations(list(my_path)[half_len:], half_len)
         my_path = a
 
-        my_path = ['AA','JJ','BB','CC']
+        #my_path = ['AA','JJ','BB','CC']
         res_my = get_total_pressure(valves, distances, my_path, minutes_limit=26)
 
         for el_path in el_paths:
@@ -131,7 +135,7 @@ def get_the_maximum_pressure2(valves, distances,  flow_rate_to_ignore=0, path_le
             a.insert(0, 'AA')
             el_path = a
 
-            el_path = ['AA','DD','HH','EE']
+            #el_path = ['AA','DD','HH','EE']
 
             res_el = get_total_pressure(valves, distances, el_path, minutes_limit=26)
             res = res_my + res_el
@@ -140,8 +144,6 @@ def get_the_maximum_pressure2(valves, distances,  flow_rate_to_ignore=0, path_le
                 print(my_path, el_path,  res)
                 print("--- %s seconds ---" % (time.time() - start_time))
 
-            break
-        break
     return best_pressure
 def calculate_all_distances(valves):
     result = {}
@@ -158,8 +160,8 @@ def main():
     valves = parse_file(file_name)
 
     distances = calculate_all_distances(valves)
-    part_one = get_the_maximum_pressure(valves, distances, flow_rate_to_ignore=1, path_len=6)
-    part_two = get_the_maximum_pressure2(valves, distances, flow_rate_to_ignore=1, path_len=6)
+    part_one = get_the_maximum_pressure(valves, distances, flow_rate_to_ignore=1)
+    part_two = get_the_maximum_pressure2(valves, distances, flow_rate_to_ignore=1)
 
     print("--- %s seconds ---" % ( time.time() - start_time))
     print("----------------------------")
@@ -172,4 +174,8 @@ if __name__ == "__main__":
 
 # Answers:
 # Part One: 1641
+# Part Two:
+
+# Answers P2:
+# Part One: 1584
 # Part Two:
