@@ -7,7 +7,6 @@ class Valve:
         self.name = name
         self.flow_rate = flow_rate
         self.lead_to = lead_to
-        self.is_closed = True
 
 
 def parse_file(file_to_process):
@@ -30,46 +29,37 @@ def parse_file(file_to_process):
     return valves
 
 
-def get_distance(valves, from_valve_name, to_valve_name, steps=0):
-    # To collect distances for all valves which is sum(1,n) where n is number of valves
+def get_distance(valves, valve_a, valve_b, steps=0):
+    # To get the shortest path from valve A to valve B
     to_go = []
     if steps == 0:
-        to_go.append(from_valve_name)
+        to_go.append(valve_a)
     else:
-        to_go = from_valve_name
+        to_go = valve_a
 
     steps += 1
     to_go_new = []
     for v in to_go:
         for valve_to_go_name in valves[v].lead_to:
-            if valve_to_go_name == to_valve_name:
+            if valve_to_go_name == valve_b:
                 return steps
-            if valves[valve_to_go_name].is_closed:
-                to_go_new.append(valve_to_go_name)
-    result = get_distance(valves, to_go_new, to_valve_name, steps)
+            to_go_new.append(valve_to_go_name)
+    distance = get_distance(valves, to_go_new, valve_b, steps)
 
-    # sim
-    return result
+    return distance
 
-
-def unvisit_valves(valves):
-    for v in valves:
-        valves[v].is_closed = True
 
 
 def breadth_first_search(valves, distances, current_valve, available_valves, rest_minutes, path=[], current_pressure=0,
                          total_pressure=0, best_pressure=0):
-    # if rest_minutes <= 0 or len(path) == len(available_valves):
-    # print(path, the_pressure)
-    # the_pressure = 0
-
     for v in available_valves:
         if v not in path and v != "AA":
-            exec_time = (distances[current_valve + v] + 1)
+            exec_time = (distances[current_valve + v] + 1)  # +1 minute to open valve
+
             if exec_time <= rest_minutes:
-                saved_minutes = rest_minutes
-                saved_cur_pressure = current_pressure
-                saved_tot_pressure = total_pressure
+                saved_m = rest_minutes
+                saved_c = current_pressure
+                saved_t = total_pressure
 
                 rest_minutes -= exec_time
                 total_pressure += exec_time * current_pressure
@@ -79,51 +69,43 @@ def breadth_first_search(valves, distances, current_valve, available_valves, res
                 tmp_pressure = breadth_first_search(valves, distances, v, available_valves, rest_minutes, path,
                                                     current_pressure, total_pressure, best_pressure)
                 if tmp_pressure > best_pressure:
-                    # print(path, current_pressure, total_pressure, best_pressure)
                     best_pressure = tmp_pressure
+
                 path.remove(v)
 
-                current_pressure = saved_cur_pressure
-                total_pressure = saved_tot_pressure
-                rest_minutes = saved_minutes
+                current_pressure = saved_c
+                total_pressure = saved_t
+                rest_minutes = saved_m
+
 
     if rest_minutes > 0:
         total_pressure += rest_minutes * current_pressure
-    # rest_minutes = 0
 
     if total_pressure > best_pressure:
-        # print(path, current_pressure, total_pressure, best_pressure)
         best_pressure = total_pressure
-
-    # if total_pressure > 1190:
-    #     print(path, current_pressure, total_pressure)
 
     return best_pressure
 
 
-
 def get_valves_with_flow(valves):
-    valves_and_flow = []
-    just_valves = []
+    valves_with_flow = []
     for v in valves:
         if valves[v].flow_rate > 0:
-            valves_and_flow.append([valves[v].flow_rate, v])
-            just_valves.append(v)
+            valves_with_flow.append(v)
 
-    return valves_and_flow, just_valves
-
-
-
+    return valves_with_flow
 
 
 def calculate_all_distances(valves):
     result = {}
     for v1 in valves:
         for v2 in valves:
-            if v1 != v2 and valves[v1].flow_rate > 0 and valves[v2].flow_rate > 0 or (
-                    v1 == 'AA' and valves[v2].flow_rate > 0):
+            if v1 != v2 and \
+                    valves[v1].flow_rate > 0 and \
+                    valves[v2].flow_rate > 0 or \
+                    (v1 == 'AA' and valves[v2].flow_rate > 0):
                 result[v1 + v2] = get_distance(valves, v1, v2)
-                unvisit_valves(valves)
+
     return result
 
 
@@ -135,30 +117,32 @@ def main():
     part_two = 0
 
     distances = calculate_all_distances(valves)
-    _, valves_with_flow_to_sort = get_valves_with_flow(valves)
-    my_path = valves_with_flow_to_sort
+    valves_with_flow = get_valves_with_flow(valves)
+    my_path = valves_with_flow
 
-
+    print("--- %s seconds ---" % (time.time() - start_time))
     best_res = breadth_first_search(valves, distances, "AA", my_path, 30)
     print(best_res)
+    print("--- %s seconds ---" % (time.time() - start_time))
 
 
+    #return
 
-    all_my_paths = itertools.permutations(valves_with_flow_to_sort, 7)
+    all_my_paths = itertools.permutations(valves_with_flow, 7)
     best_res = 0
 
     # for 7 it will be  =  15!/(15-7)! = 32,432,400
     a = 0
     for my_path in all_my_paths:
-        a+=1
+        a += 1
         if a % 10000 == 0:
             print("Count: %i           %s seconds" % (a, time.time() - start_time))
 
-        el_path = set(valves_with_flow_to_sort).difference(set(my_path))
+        el_path = set(valves_with_flow).difference(set(my_path))
         res_my = breadth_first_search(valves, distances, "AA", my_path, 26)
         res_el = breadth_first_search(valves, distances, "AA", el_path, 26)
         if (res_my + res_el) > best_res:
-            print(my_path, el_path, "Res = ", res_my + res_el)
+            print(my_path, el_path, "Res = ", res_my, res_el, res_my + res_el)
             best_res = res_my + res_el
 
     print("--- %s seconds ---" % (time.time() - start_time))
@@ -172,8 +156,8 @@ if __name__ == "__main__":
 
 # Answers:
 # Part One: 1641
-# Part Two:
+# Part Two: 2261
 
 # Answers P2:
-# Part One: 1641
-# Part Two: 2261
+# Part One: 1584
+# Part Two: 2052
