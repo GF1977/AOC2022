@@ -58,11 +58,10 @@ def calculate_all_distances(valves):
     return result
 
 
-def breadth_first_search(valves, available_valves, rest_minutes):
+def breadth_first_search(valves, available_valves, distances, rest_minutes):
     current_pressure = 0
     total_pressure = 0
     max_pressure = 0
-    distances = calculate_all_distances(valves)
     max_path = []
     queue = collections.deque([("AA", available_valves, rest_minutes, current_pressure, total_pressure, ["AA"])])
 
@@ -109,19 +108,44 @@ def get_path_cost(my_path, distances):
     return path_cost
 
 
+def get_pressure_for_path(valves, path, distances, rest_minutes):
+    current_valve = "AA"
+    total_pressure = 0
+    current_pressure = 0
+    for v in path:
+        if v == "AA":
+            continue
+        exec_time = (distances[current_valve + v] + 1)
+        if exec_time <= rest_minutes:
+            rest_minutes -= exec_time
+            total_pressure += exec_time * current_pressure
+            current_pressure += valves[v].flow_rate
+            current_valve = v
+    if rest_minutes > 0:
+        total_pressure += rest_minutes * current_pressure
+
+    return total_pressure
+
+
 def main():
     start_time = time.time()
-    file_name = "Day16-input-d.txt"
+    file_name = "Day16-Input-p.txt"
     valves = parse_file(file_name)
+    distances = calculate_all_distances(valves)
+
     part_one = 0
     part_two = 0
 
     valves_with_flow = [key for key, value in valves.items() if value.flow_rate > 0]
 
     # 30 minutes is hardcoded requirement for this scenario
-    best_res, best_path = breadth_first_search(valves, valves_with_flow, rest_minutes=30)
+    best_res, best_path = breadth_first_search(valves, valves_with_flow, distances, rest_minutes=30)
     print(best_res, best_path)
     print("--- %s seconds ---" % (time.time() - start_time))
+
+    cost = get_pressure_for_path(valves, best_path, distances, rest_minutes=30)
+    print("Cost for: ", best_path, " = ", cost)
+
 
     # Part two
 
@@ -129,14 +153,14 @@ def main():
     best_res = 0
     # for 7 it will be  =  15!/(15-7)! = 32,432,400
 
-    distances = calculate_all_distances(valves)
     for my_path in all_my_paths:
 
         el_path = list(set(valves_with_flow).difference(set(my_path)))
 
         # 26 minutes is hardcoded requirement for this scenario
-        res_my, best_path_my = breadth_first_search(valves, my_path, rest_minutes=26)
-        res_el, best_path_el = breadth_first_search(valves, el_path, rest_minutes=26)
+        res_my, best_path_my = breadth_first_search(valves, my_path, distances, rest_minutes=26)
+
+        res_el, best_path_el = breadth_first_search(valves, el_path, distances, rest_minutes=26)
         if (res_my + res_el) > best_res:
             print(best_path_my, best_path_el, "    Res = ", res_my, "+", res_el, "=", res_my + res_el)
             print("--- %s seconds ---" % (time.time() - start_time))
