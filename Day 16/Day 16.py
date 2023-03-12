@@ -1,6 +1,8 @@
 import itertools
 import time
+import re
 
+from collections import deque
 
 class Valve:
     def __init__(self, name, flow_rate, lead_to):
@@ -8,46 +10,40 @@ class Valve:
         self.flow_rate = flow_rate
         self.lead_to = lead_to
 
-
 def parse_file(file_to_process):
-    file = open(file_to_process, mode="r")
-    data: list[str] = file.read().split("\n")
+    with open(file_to_process, mode="r") as file:
+        lines = file.readlines()
+
     valves = {}
 
-    for line in data:
-        tmp = line.split("; ")
-        valve_name = tmp[0].split(" ")[1]
-        flow_rate = int(tmp[0].split("=")[1])
-        tmp_lead_to = tmp[1].split(" ")
-        lead_to = []
-        for i in range(4, len(tmp_lead_to)):
-            lead_to.append(tmp_lead_to[i].replace(",", ""))
-
-        valve = Valve(valve_name, flow_rate, lead_to)
-        valves[valve_name] = valve
+    for line in lines:
+        match = re.search(r'Valve\s+(\w+)\s+has flow rate=(\d+);\s+tunnel[s]*\s+lead[s]*\s+to\s+valve[s]*\s+([\w, ]+)', line)
+        if match:
+            name = match.group(1)
+            flow_rate = int(match.group(2))
+            lead_to = [v.strip() for v in match.group(3).split(',')]
+            valve = Valve(name, flow_rate, lead_to)
+            valves[name] = valve
 
     return valves
 
 
-def get_distance(valves, valve_a, valve_b, steps=0):
+def get_distance(valves, valve_a, valve_b):
     # To get the shortest path from valve A to valve B
-    to_go = []
-    if steps == 0:
-        to_go.append(valve_a)
-    else:
-        to_go = valve_a
+    visited = set()
+    to_go = [(valve_a, 0)]
 
-    steps += 1
-    to_go_new = []
-    for v in to_go:
-        for valve_to_go_name in valves[v].lead_to:
-            if valve_to_go_name == valve_b:
-                return steps
-            to_go_new.append(valve_to_go_name)
-    distance = get_distance(valves, to_go_new, valve_b, steps)
+    while to_go:
+        v, steps = to_go.pop(0)
+        if v == valve_b:
+            return steps
 
-    return distance
+        visited.add(v)
+        for next_valve in valves[v].lead_to:
+            if next_valve not in visited:
+                to_go.append((next_valve, steps+1))
 
+    return None
 
 
 def breadth_first_search(valves, distances, current_valve, available_valves, rest_minutes, path=[], current_pressure=0,
@@ -101,12 +97,19 @@ def calculate_all_distances(valves):
     for v1 in valves:
         for v2 in valves:
             if v1 != v2 and \
-                    valves[v1].flow_rate > 0 and \
-                    valves[v2].flow_rate > 0 or \
-                    (v1 == 'AA' and valves[v2].flow_rate > 0):
+                    (v1 == 'AA' or valves[v1].flow_rate > 0) and valves[v2].flow_rate > 0:
                 result[v1 + v2] = get_distance(valves, v1, v2)
 
     return result
+
+def get_path_cost(my_path, distances):
+    path_cost = 0
+    for i in range(0, len(my_path) - 1):
+        v1 = my_path[i]
+        v2 = my_path[i+1]
+        path_cost += distances[v1+v2]
+
+    return path_cost
 
 
 def main():
@@ -120,7 +123,8 @@ def main():
     valves_with_flow = get_valves_with_flow(valves)
     my_path = valves_with_flow
 
-    print("--- %s seconds ---" % (time.time() - start_time))
+    result = []
+
     best_res = breadth_first_search(valves, distances, "AA", my_path, 30)
     print(best_res)
     print("--- %s seconds ---" % (time.time() - start_time))
@@ -135,10 +139,14 @@ def main():
     a = 0
     for my_path in all_my_paths:
         a += 1
-        if a % 10000 == 0:
+        if a % 1000000 == 0:
             print("Count: %i           %s seconds" % (a, time.time() - start_time))
 
         el_path = set(valves_with_flow).difference(set(my_path))
+        path_cost = get_path_cost(my_path, distances)
+        if path_cost > 18:
+            continue
+
         res_my = breadth_first_search(valves, distances, "AA", my_path, 26)
         res_el = breadth_first_search(valves, distances, "AA", el_path, 26)
         if (res_my + res_el) > best_res:
